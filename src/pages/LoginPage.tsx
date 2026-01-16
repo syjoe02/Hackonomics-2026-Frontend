@@ -9,6 +9,8 @@ import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 
+const API_SERVER_URL = import.meta.env.VITE_API_SERVER_URL;
+
 export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -40,25 +42,26 @@ export default function LoginPage() {
                 password,
                 device_id: getDeviceId(),
                 remember_me: rememberMe,
-            },
-                {
-                    // Get refreshToken cookie
-                    withCredentials: true,
-                }
-            );
+            });
 
             const { access_token } = res.data;
             login(access_token);
             navigate("/me");
         } catch (err: any) {
-            setError(err.response?.data?.detail || "Failed Login");
+            const data = err.response?.data;
+
+            if (data?.message) {
+                setError(data.message);
+            } else {
+                setError("Login failed. Please try again.")
+            }
         } finally {
             setLoading(false);
         }
     };
 
     const handleGoogleLogin = () => {
-        window.location.href = "http://localhost:8000/api/auth/google/login/";
+        window.location.href = `${API_SERVER_URL}/api/auth/google/login/`;
     }
 
     return (
@@ -84,7 +87,7 @@ export default function LoginPage() {
                 )}
 
                 {/* Form */}
-                <div className="space-y-5">
+                <form onSubmit={handleSubmit} className="space-y-5">
                     <Input
                         type="email"
                         label="Email Address"
@@ -141,7 +144,7 @@ export default function LoginPage() {
                     >
                         Sign In
                     </Button>
-                </div>
+                </form>
 
                 {/* Divider */}
                 <div className="my-6 flex items-center">

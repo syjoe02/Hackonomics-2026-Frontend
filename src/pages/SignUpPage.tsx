@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
-import { Lock, Mail, Eye, EyeOff, AlertCircle, User, Check } from "lucide-react";
+import { Lock, Mail, Eye, EyeOff, AlertCircle, Check } from "lucide-react";
 
 import AuthLayout from "../components/layouts/AuthLayout";
 import Card from "../components/ui/Card";
@@ -47,7 +47,6 @@ export default function SignUpPage() {
 
     const passwordErrors = validatePassword(formData.password);
     const passwordStrength = getPasswordStrength(formData.password);
-    const isPasswordValid = passwordErrors.length === 0;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({
@@ -92,15 +91,10 @@ export default function SignUpPage() {
             navigate("/login");
         } catch (err: any) {
             const data = err.response?.data;
-            if (data) {
-                if (typeof data === "string") {
-                    setError(data);
-                } else {
-                    const firstKey = Object.keys(data)[0];
-                    setError(data[firstKey][0]);
-                }
+            if (data?.message) {
+                setError(data.message);
             } else {
-                setError("Failed to sign up");
+                setError("Failed to sign up. Please try again.");
             }
         } finally {
             setLoading(false);
@@ -189,12 +183,12 @@ export default function SignUpPage() {
                             <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                                 <div
                                     className={`h-full transition-all ${passwordStrength.strength === 1
-                                            ? "w-1/3 bg-red-500"
-                                            : passwordStrength.strength === 2
-                                                ? "w-2/3 bg-yellow-400"
-                                                : passwordStrength.strength === 3
-                                                    ? "w-full bg-green-500"
-                                                    : "w-0"
+                                        ? "w-1/3 bg-red-500"
+                                        : passwordStrength.strength === 2
+                                            ? "w-2/3 bg-yellow-400"
+                                            : passwordStrength.strength === 3
+                                                ? "w-full bg-green-500"
+                                                : "w-0"
                                         }`}
                                 />
                             </div>

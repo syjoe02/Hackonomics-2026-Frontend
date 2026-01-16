@@ -1,31 +1,25 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { api } from "../api/client";
 
 export default function OAuthCallbackPage() {
     const navigate = useNavigate();
     const { setAccessToken } = useAuth();
 
     useEffect(() => {
-        async function fetchAccessToken() {
+        const run = async () => {
             try {
-                const res = await fetch("/api/auth/refresh/", {
-                    method: "POST",
-                    credentials: "include",
-                });
-
-                if (!res.ok) throw new Error("refresh failed");
-
-                const data = await res.json();
-                setAccessToken(data.access_token);
-                navigate("/me");
+                const res = await api.post("/auth/refresh/", {}, { withCredentials: true });
+                setAccessToken(res.data.access_token);
+                navigate("/me", { replace: true });
             } catch {
-                navigate("/login");
+                navigate("/login", { replace: true });
             }
-        }
+        };
 
-        fetchAccessToken();
+        run();
     }, []);
 
-    return <div>Logging in with Google...</div>;
+    return <div className="text-center p-10">Logging in with Google...</div>;
 }
