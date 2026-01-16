@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { useEffect, useState } from "react";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 interface ProtectedRouteProps {
     children: ReactNode;
 }
@@ -19,7 +21,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
             }
 
             try {
-                const res = await fetch("http://localhost:8000/api/auth/refresh/", {
+                const res = await fetch(`${API_BASE_URL}/auth/refresh/`, {
                     method: "POST",
                     credentials: "include",
                 });

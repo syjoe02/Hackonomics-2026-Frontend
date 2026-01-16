@@ -1,10 +1,13 @@
 import axios from "axios"
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export const api = axios.create({
-    baseURL: "http://localhost:8000/api",
+    baseURL: API_BASE_URL,
     headers: {
         "Content-Type": "application/json",
-    }
+    },
+    withCredentials: true,
 });
 
 api.interceptors.request.use((config) => {
@@ -19,13 +22,14 @@ api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
+        const data = error.response?.data;
 
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
 
             try {
                 const res = await axios.post(
-                    "http://localhost:8000/api/auth/refresh/",
+                    `${API_BASE_URL}/auth/refresh/`,
                     {},
                     { withCredentials: true }
                 );
@@ -42,6 +46,12 @@ api.interceptors.response.use(
                 return Promise.reject(refreshError);
             }
         }
-        return Promise.reject(error);
+        if (data?.code && data?.message) {
+            return Promise.reject(data);
+        }
+        return Promise.reject({
+            code: "UNKNOWN_ERROR",
+            message: "Unexpected error occurred",
+        });
     }
 );
