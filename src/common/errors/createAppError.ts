@@ -1,8 +1,20 @@
 import { ErrorCatalog } from "./errorCatalog";
 import type { AppError } from "./errorTypes";
 
+type ApiErrorResponse = {
+    status?: number;
+    code?: string;
+    message?: string;
+};
+
+type AxiosLikeError = {
+    response?: {
+        data?: ApiErrorResponse;
+    };
+};
+
 export function createAppError(
-    source: keyof typeof ErrorCatalog | any,
+    source: keyof typeof ErrorCatalog | unknown,
     overrideMessage?: string
 ): AppError {
     // 1: ErrorCatalog Key
@@ -17,7 +29,8 @@ export function createAppError(
         };
     }
     // 2: API error (axios error)
-    const data = source?.response?.data;
+    const err = source as AxiosLikeError | null;
+    const data = err?.response?.data;
 
     const code = data?.code ?? "INTERNAL_ERROR";
     const def =

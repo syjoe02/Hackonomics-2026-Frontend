@@ -1,10 +1,9 @@
 import { Navigate } from "react-router-dom";
 import type { ReactNode } from "react";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 import { useEffect, useState } from "react";
 import { api } from "@/api/client";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 interface ProtectedRouteProps {
     children: ReactNode;

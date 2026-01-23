@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import { Lock, Mail, Eye, EyeOff, AlertCircle, Check } from "lucide-react";
 import { raiseAppError } from "@/common/errors/raiseAppError";
+import { AxiosError } from "axios";
 
 import AuthLayout from "../components/layouts/AuthLayout";
 import Card from "../components/ui/Card";
@@ -104,9 +105,22 @@ export default function SignUpPage() {
 
             alert("Sign up successful! Please log in.");
             navigate("/login");
-        } catch (err: any) {
-            const appError = raiseAppError(err, navigate);
-            setError(appError.message);
+        } catch (err: unknown) {
+            if (err instanceof AxiosError) {
+                const appError = raiseAppError(
+                    err.response?.data?.code ?? "UNKNOWN_ERROR",
+                    navigate,
+                    err.response?.data?.message
+                );
+                setError(appError.message);
+            } else {
+                const appError = raiseAppError(
+                    "UNKNOWN_ERROR",
+                    navigate,
+                    "Unexpected login error"
+                );
+                setError(appError.message);
+            }
         } finally {
             setLoading(false);
         }

@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 import { api } from "../api/client";
 import { raiseAppError } from "@/common/errors/raiseAppError";
+import { AxiosError } from "axios";
 
 export default function OAuthCallbackPage() {
     const navigate = useNavigate();
@@ -16,8 +17,20 @@ export default function OAuthCallbackPage() {
                 // verify me
                 await api.get("/auth/me/")
                 navigate("/me", { replace: true });
-            } catch (err: any) {
-                raiseAppError("UNAUTHORIZED", navigate, err?.response?.data?.message);
+            } catch (err: unknown) {
+                if (err instanceof AxiosError) {
+                    raiseAppError(
+                        "UNAUTHORIZED",
+                        navigate,
+                        err.response?.data?.message
+                    );
+                } else {
+                    raiseAppError(
+                        "UNAUTHORIZED",
+                        navigate,
+                        "Unexpected authentication error"
+                    );
+                }
             }
         };
 

@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 import { Lock, Mail, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { raiseAppError } from "@/common/errors/raiseAppError";
+import { AxiosError } from "axios";
 
 import AuthLayout from "../components/layouts/AuthLayout";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
+
 
 const API_SERVER_URL = import.meta.env.VITE_API_SERVER_URL;
 
@@ -50,13 +52,22 @@ export default function LoginPage() {
             // verify me
             await api.get("/auth/me/");
             navigate("/me");
-        } catch (err: any) {
-            const e = raiseAppError(
-                err.response?.data?.code ?? "UNKNOWN_ERROR",
-                navigate,
-                err.response?.data?.message
-            );
-            setError(e.message);
+        } catch (err: unknown) {
+            if (err instanceof AxiosError) {
+                const appError = raiseAppError(
+                    err.response?.data?.code ?? "UNKNOWN_ERROR",
+                    navigate,
+                    err.response?.data?.message
+                );
+                setError(appError.message);
+            } else {
+                const appError = raiseAppError(
+                    "UNKNOWN_ERROR",
+                    navigate,
+                    "Unexpected login error"
+                );
+                setError(appError.message);
+            }
         } finally {
             setLoading(false);
         }

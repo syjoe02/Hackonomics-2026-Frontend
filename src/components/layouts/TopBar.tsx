@@ -1,6 +1,6 @@
 // src/components/layouts/TopBar.tsx
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/auth/AuthContext";
+import { useAuth } from "@/auth/useAuth";
 import { api } from "@/api/client";
 import { Home, LogOut } from "lucide-react";
 import Button from "@/components/ui/Button";
