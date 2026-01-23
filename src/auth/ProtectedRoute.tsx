@@ -2,6 +2,7 @@ import { Navigate } from "react-router-dom";
 import type { ReactNode } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { useEffect, useState } from "react";
+import { api } from "@/api/client";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -21,17 +22,11 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
             }
 
             try {
-                const res = await fetch(`${API_BASE_URL}/auth/refresh/`, {
-                    method: "POST",
-                    credentials: "include",
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    setAccessToken(data.access_token);
-                }
+                const res = await api.post("/auth/refresh/");
+                const newAccessToken = res.data.access_token;
+                setAccessToken(newAccessToken);
             } catch {
-                // ignore
+                // refresh failed -> login again
             } finally {
                 setChecking(false);
             }
