@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { Lock, Mail, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { raiseAppError } from "@/common/errors/raiseAppError";
 
 import AuthLayout from "../components/layouts/AuthLayout";
 import Card from "../components/ui/Card";
@@ -46,15 +47,16 @@ export default function LoginPage() {
 
             const { access_token } = res.data;
             login(access_token);
+            // verify me
+            await api.get("/auth/me/");
             navigate("/me");
         } catch (err: any) {
-            const data = err.response?.data;
-
-            if (data?.message) {
-                setError(data.message);
-            } else {
-                setError("Login failed. Please try again.")
-            }
+            const e = raiseAppError(
+                err.response?.data?.code ?? "UNKNOWN_ERROR",
+                navigate,
+                err.response?.data?.message
+            );
+            setError(e.message);
         } finally {
             setLoading(false);
         }

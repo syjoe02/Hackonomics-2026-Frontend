@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import { Lock, Mail, Eye, EyeOff, AlertCircle, Check } from "lucide-react";
+import { raiseAppError } from "@/common/errors/raiseAppError";
 
 import AuthLayout from "../components/layouts/AuthLayout";
 import Card from "../components/ui/Card";
@@ -15,10 +16,10 @@ export default function SignUpPage() {
         confirmPassword: "",
     });
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const navigate = useNavigate();
 
@@ -45,7 +46,6 @@ export default function SignUpPage() {
         return errors;
     };
 
-    const passwordErrors = validatePassword(formData.password);
     const passwordStrength = getPasswordStrength(formData.password);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,19 +63,34 @@ export default function SignUpPage() {
         const passwordErrors = validatePassword(formData.password);
 
         if (passwordErrors.length > 0) {
-            setError(passwordErrors[0]);
+            const e = raiseAppError(
+                "CLIENT_VALIDATION_ERROR",
+                navigate,
+                passwordErrors[0]
+            );
+            setError(e.message);
             setLoading(false);
             return;
         }
 
         if (formData.password !== formData.confirmPassword) {
-            setError("Password and confirm password do not match.");
+            const appError = raiseAppError(
+                "CLIENT_VALIDATION_ERROR",
+                navigate,
+                "Password and confirm password do not match."
+            );
+            setError(appError.message);
             setLoading(false);
             return;
         }
 
         if (!agreedToTerms) {
-            setError("Please agree to the terms and conditions.");
+            const appError = raiseAppError(
+                "CLIENT_VALIDATION_ERROR",
+                navigate,
+                "Please agree to the terms and conditions."
+            );
+            setError(appError.message);
             setLoading(false);
             return;
         }
@@ -90,12 +105,8 @@ export default function SignUpPage() {
             alert("Sign up successful! Please log in.");
             navigate("/login");
         } catch (err: any) {
-            const data = err.response?.data;
-            if (data?.message) {
-                setError(data.message);
-            } else {
-                setError("Failed to sign up. Please try again.");
-            }
+            const appError = raiseAppError(err, navigate);
+            setError(appError.message);
         } finally {
             setLoading(false);
         }

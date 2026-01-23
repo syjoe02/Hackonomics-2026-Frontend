@@ -1,4 +1,6 @@
 import axios from "axios"
+import { tokenStore } from "@/auth/tokenStore";
+import { createAppError } from "@/common/errors/createAppError";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -11,7 +13,7 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("access_token");
+    const token = tokenStore.get();
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
@@ -22,9 +24,16 @@ api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
-        const data = error.response?.data;
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        const isAuthEndpoint =
+            originalRequest.url?.includes("/auth/login") ||
+            originalRequest.url?.includes("/auth/signup") ||
+            originalRequest.url?.includes("/auth/refresh");
+
+        if (error.response?.status === 401 &&
+            !originalRequest._retry &&
+            !isAuthEndpoint
+        ) {
             originalRequest._retry = true;
 
             try {
@@ -35,23 +44,15 @@ api.interceptors.response.use(
                 );
 
                 const newAccessToken = res.data.access_token;
-                localStorage.setItem("access_token", newAccessToken);
+                tokenStore.set(newAccessToken);
                 originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-
                 // redirect
                 return api(originalRequest);
             } catch (refreshError) {
-                localStorage.removeItem("access_token");
-                window.location.href = "/login";
-                return Promise.reject(refreshError);
+                tokenStore.clear();
+                return Promise.reject(createAppError(refreshError));
             }
         }
-        if (data?.code && data?.message) {
-            return Promise.reject(data);
-        }
-        return Promise.reject({
-            code: "UNKNOWN_ERROR",
-            message: "Unexpected error occurred",
-        });
+        return Promise.reject(createAppError(error));
     }
 );
