@@ -294,12 +294,6 @@ export default function MyPage() {
                     </div>
                     <h1 className="text-4xl font-bold">My Account</h1>
                     <p className="text-blue-200">Welcome, {user.email}</p>
-
-                    <div className="mt-4">
-                        <Button onClick={handleLogout} variant="secondary" className="bg-white/90 hover:bg-white">
-                            <span>Logout</span>
-                        </Button>
-                    </div>
                 </div>
 
                 {/* Success Alert */}

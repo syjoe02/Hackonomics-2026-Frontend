@@ -1,63 +1,47 @@
-import type { ReactNode } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/auth/AuthContext";
 
+import MainLayout from "./components/layouts/MainLayout";
 import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage"
 import MyPage from "./pages/MyPage";
 import HomePage from "./pages/HomePage";
 
-function ProtectedRoute({ children }: { children: ReactNode }) {
+function ProtectedRoute() {
   const { accessToken, loading } = useAuth();
+
   if (loading) return null;
   if (!accessToken) return <Navigate to="/login" replace />;
-  return children;
+
+  return <Outlet />;
 }
 
-function PublicRoute({ children }: { children: ReactNode }) {
+function PublicRoute() {
   const { accessToken } = useAuth();
   if (accessToken) return <Navigate to="/me" replace />;
-  return children;
+  return <Outlet />;
 }
 // Routers
 export default function AppRouter() {
   return (
     <AuthProvider>
       <Routes>
-        {/* Home */}
-        <Route path="/" element={<HomePage />} />
-
         {/* Public */}
-        <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <LoginPage />
-            </PublicRoute>
-          }
-        />
-
-        <Route
-          path="/signup"
-          element={
-            <PublicRoute>
-              <SignUpPage />
-            </PublicRoute>
-          }
-        />
-
-        <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
+        <Route element={<PublicRoute />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
+        </Route>
 
         {/* Protected */}
-        <Route
-          path="/me"
-          element={
-            <ProtectedRoute>
-              <MyPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<MainLayout />}>
+            <Route path="/me" element={<MyPage />} />
+
+          </Route>
+        </Route>
       </Routes>
     </AuthProvider>
   );

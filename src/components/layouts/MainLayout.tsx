@@ -4,11 +4,11 @@ import TopBar from "./TopBar";
 
 export default function MainLayout() {
     return (
-        <>
+        <div className="min-h-screen">
             <TopBar />
-            <div className="pt-20">
+            <div className="pt-30">
                 <Outlet />
             </div>
-        </>
+        </div>
     );
 }
