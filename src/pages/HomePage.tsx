@@ -1,4 +1,3 @@
-// src/pages/HomePage.tsx
 import { useNavigate } from "react-router-dom";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";

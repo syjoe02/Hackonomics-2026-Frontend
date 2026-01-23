@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 import { api } from "../api/client";
 import { useNavigate } from "react-router-dom";
 import {
@@ -20,9 +20,8 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 
 // API Types
-import type { UserInfo, Country, ExchangeRate } from "@/api/types";
+import type { UserInfo, Country, ExchangeRate, MyExchangeRate } from "@/api/types";
 // Domain Types
-import type { Account, MyExchangeRate } from "@/domains/account/types";
 import { mapAccountFromApi } from "@/domains/account/mappers";
 
 export default function MyPage() {
@@ -31,8 +30,6 @@ export default function MyPage() {
     // Auth
     const [user, setUser] = useState<UserInfo | null>(null);
     const [loading, setLoading] = useState(true);
-    // Account (Domain)
-    const [account, setAccount] = useState<Account | null>(null);
     // Countries
     const [countries, setCountries] = useState<Country[]>([]);
     const [filteredCountries, setFilteredCountries] = useState<Country[]>([]);
@@ -124,7 +121,6 @@ export default function MyPage() {
             const res = await api.get("/account/me/");
             const domainAccount = mapAccountFromApi(res.data);
 
-            setAccount(domainAccount);
             setAnnualIncome(String(domainAccount.annualIncome));
             setMonthlyInvestableAmount(String(domainAccount.monthlyInvestableAmount));
 
@@ -158,7 +154,7 @@ export default function MyPage() {
                 base: apiRate.base,
                 target: apiRate.target,
                 rate: apiRate.rate,
-                lastUpdated: apiRate.last_updated,
+                last_updated: apiRate.last_updated,
             });
         } catch {
             // not exist account user for New user
@@ -254,18 +250,6 @@ export default function MyPage() {
             raiseAppError(err, navigate);
         } finally {
             setUpdating(false);
-        }
-    };
-
-    const handleLogout = async () => {
-        try {
-            await api.post("/auth/logout/", {}, { withCredentials: true });
-        } catch (err) {
-            raiseAppError(err, navigate);
-        } finally {
-            sessionStorage.removeItem("myExchangeRate");
-            logout();
-            navigate("/login");
         }
     };
 
@@ -497,10 +481,10 @@ export default function MyPage() {
                                 1 {myExchangeRate.base} = {myExchangeRate.rate.toFixed(4)} {myExchangeRate.target}
                             </p>
 
-                            {myExchangeRate.lastUpdated && (
+                            {myExchangeRate.last_updated && (
                                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                                     <Clock size={16} />
-                                    <span>Last updated: {formatDate(myExchangeRate.lastUpdated)}</span>
+                                    <span>Last updated: {formatDate(myExchangeRate.last_updated)}</span>
                                 </div>
                             )}
                         </div>

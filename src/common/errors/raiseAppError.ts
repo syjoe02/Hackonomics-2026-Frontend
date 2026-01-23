@@ -5,15 +5,35 @@ import type { NavigateFunction } from "react-router-dom";
 
 type CatalogKey = keyof typeof ErrorCatalog;
 
+type ApiErrorResponse = {
+    status?: number;
+    code?: string;
+    message?: string;
+};
+
+type AxiosLikeError = {
+    response?: {
+        data?: ApiErrorResponse;
+    };
+};
+
+function isAxiosLikeError(error: unknown): error is AxiosLikeError {
+    return (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error
+    );
+}
+
 export function raiseAppError(
-    source: any | CatalogKey,
+    source: unknown | CatalogKey,
     navigate: NavigateFunction,
     overrideMessage?: string
 ): AppError {
     let appError: AppError;
 
     // 1) API error (axios error)
-    if (typeof source === "object" && source?.response) {
+    if (isAxiosLikeError(source)) {
         const data = source.response?.data;
         const code = data?.code ?? "INTERNAL_ERROR";
 

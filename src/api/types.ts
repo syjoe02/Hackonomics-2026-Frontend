@@ -27,7 +27,7 @@ export interface AccountApiResponse {
 }
 
 //accounts/me/exchange-rate
-export interface MyExchangeRateApiResponse {
+export interface MyExchangeRate {
     base: string;
     target: string;
     rate: number;
