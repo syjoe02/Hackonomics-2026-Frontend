@@ -20,11 +20,13 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 
 // API Types
-import type { UserInfo, Country, ExchangeRate, MyExchangeRate } from "@/api/types";
+import type { UserInfo, Country, ExchangeRate } from "@/api/types";
 // Domain Types
+import type { MyExchangeRate } from "@/domains/account/types";
 import { mapAccountFromApi } from "@/domains/account/mappers";
 
 export default function MyPage() {
+    console.log("MyPage render start");
     const { logout } = useAuth();
     const navigate = useNavigate();
     // Auth
@@ -54,6 +56,7 @@ export default function MyPage() {
     const [saveSuccess, setSaveSuccess] = useState(false);
 
     useEffect(() => {
+        console.log("MyPage init start");
         async function init() {
             try {
                 const meRes = await api.get("/auth/me/");
@@ -80,7 +83,7 @@ export default function MyPage() {
         }
 
         init();
-    }, []);
+    }, [logout, navigate]);
 
     useEffect(() => {
         console.log("USER:", user);
@@ -150,11 +153,16 @@ export default function MyPage() {
             const res = await api.get("/account/me/exchange-rate/");
             const apiRate = res.data;
 
+            if (!apiRate?.base || !apiRate?.target || !apiRate?.rate) {
+                console.warn("Invalid exchange rate response", apiRate);
+                return;
+            }
+
             setMyExchangeRate({
                 base: apiRate.base,
                 target: apiRate.target,
                 rate: apiRate.rate,
-                last_updated: apiRate.last_updated,
+                lastUpdated: apiRate.last_updated,
             });
         } catch {
             // not exist account user for New user
@@ -266,7 +274,13 @@ export default function MyPage() {
         );
     }
 
-    if (!user) return null;
+    if (!user) {
+        return (
+            <div className="min-h-screen flex items-center justify-center text-white">
+                Failed to load user
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-900 p-8">
@@ -277,7 +291,7 @@ export default function MyPage() {
                         <UserIcon className="text-white" size={32} />
                     </div>
                     <h1 className="text-4xl font-bold">My Account</h1>
-                    <p className="text-blue-200">Welcome, {user.email}</p>
+                    <p className="text-blue-200">Welcome, {user?.email ?? "User"}</p>
                 </div>
 
                 {/* Success Alert */}
@@ -481,10 +495,10 @@ export default function MyPage() {
                                 1 {myExchangeRate.base} = {myExchangeRate.rate.toFixed(4)} {myExchangeRate.target}
                             </p>
 
-                            {myExchangeRate.last_updated && (
+                            {myExchangeRate.lastUpdated && (
                                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                                     <Clock size={16} />
-                                    <span>Last updated: {formatDate(myExchangeRate.last_updated)}</span>
+                                    <span>Last updated: {formatDate(myExchangeRate.lastUpdated)}</span>
                                 </div>
                             )}
                         </div>
