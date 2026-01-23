@@ -91,27 +91,8 @@ export default function HomePage() {
 
                 {/* Chart + Controls */}
                 <Card className="h-[480px] flex flex-col">
-                    {/* Period Buttons */}
-                    <div className="flex justify-center gap-2 mb-4">
-                        {PERIODS.map((p) => (
-                            <Button
-                                key={p.value}
-                                variant={
-                                    period === p.value
-                                        ? "primary"
-                                        : "secondary"
-                                }
-                                onClick={() => setPeriod(p.value)}
-                                size="sm"
-                                disabled={!currency || loading}
-                            >
-                                {p.label}
-                            </Button>
-                        ))}
-                    </div>
-
                     {/* Chart */}
-                    <div className="flex-1">
+                    <div className="flex-1 mb-6">
                         {!currency ? (
                             <div className="h-full flex items-center justify-center text-gray-400">
                                 Loading currency...
@@ -153,6 +134,24 @@ export default function HomePage() {
                                 </LineChart>
                             </ResponsiveContainer>
                         )}
+                    </div>
+                    {/* Period Buttons */}
+                    <div className="flex justify-center gap-3 mb-4">
+                        {PERIODS.map((p) => (
+                            <Button
+                                key={p.value}
+                                variant={
+                                    period === p.value
+                                        ? "primary"
+                                        : "secondary"
+                                }
+                                onClick={() => setPeriod(p.value)}
+                                size="sm"
+                                disabled={!currency || loading}
+                            >
+                                {p.label}
+                            </Button>
+                        ))}
                     </div>
                 </Card>
             </div>
