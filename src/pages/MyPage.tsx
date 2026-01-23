@@ -162,7 +162,7 @@ export default function MyPage() {
                 base: apiRate.base,
                 target: apiRate.target,
                 rate: apiRate.rate,
-                lastUpdated: apiRate.last_updated,
+                lastUpdated: new Date().toISOString(),
             });
         } catch {
             // not exist account user for New user
@@ -483,10 +483,24 @@ export default function MyPage() {
                                 <TrendingUp className="text-purple-600" size={24} />
                                 <h2 className="text-2xl font-bold text-gray-800">My Exchange Rate</h2>
                             </div>
-                            <Button onClick={handleUpdateExchangeRate} loading={updating} variant="secondary">
-                                <RefreshCw size={16} />
-                                <span>Update</span>
-                            </Button>
+
+                            <div className="flex items-center space-x-4">
+                                {myExchangeRate.lastUpdated && (
+                                    <div className="flex items-center space-x-1 text-sm text-gray-500">
+                                        <Clock size={14} />
+                                        <span>{formatDate(myExchangeRate.lastUpdated)}</span>
+                                    </div>
+                                )}
+
+                                <Button
+                                    onClick={handleUpdateExchangeRate}
+                                    loading={updating}
+                                    variant="secondary"
+                                >
+                                    <RefreshCw size={16} />
+                                    <span>Update</span>
+                                </Button>
+                            </div>
                         </div>
 
                         <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl">
