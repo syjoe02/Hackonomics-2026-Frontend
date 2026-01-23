@@ -23,7 +23,7 @@ export default function TopBar() {
     };
 
     return (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur border-b shadow-sm">
+        <div className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-black/10">
             <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
                 <Button onClick={handleGoHome} variant="secondary">
                     <Home size={16} />
