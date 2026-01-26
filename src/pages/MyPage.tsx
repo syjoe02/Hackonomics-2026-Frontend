@@ -446,23 +446,39 @@ export default function MyPage() {
                     </div>
 
                     <div className="space-y-4">
-                        <Input
-                            type="number"
-                            placeholder="Annual Income (e.g. 50000)"
-                            value={annualIncome}
-                            onChange={(e) => setAnnualIncome(e.target.value)}
-                            icon={<TrendingUp size={20} />}
-                            label="Annual Income"
-                        />
+                        {/* Annual Income */}
+                        <div className="relative">
+                            <Input
+                                type="number"
+                                placeholder="Annual Income (e.g. 50000)"
+                                value={annualIncome}
+                                onChange={(e) => setAnnualIncome(e.target.value)}
+                                icon={<TrendingUp size={20} />}
+                                label="Annual Income"
+                            />
+                            {selectedCurrency && (
+                                <span className="absolute right-4 top-[42px] px-2 py-1 bg-gray-100 border border-gray-300 rounded-md text-xs font-semibold text-gray-600">
+                                    {selectedCurrency}
+                                </span>
+                            )}
+                        </div>
 
-                        <Input
-                            type="number"
-                            placeholder="Monthly Investable Amount (e.g. 1000)"
-                            value={monthlyInvestableAmount}
-                            onChange={(e) => setMonthlyInvestableAmount(e.target.value)}
-                            icon={<DollarSign size={20} />}
-                            label="Monthly Investable Amount"
-                        />
+                        {/* Monthly Investable Amount */}
+                        <div className="relative">
+                            <Input
+                                type="number"
+                                placeholder="Monthly Investable Amount (e.g. 1000)"
+                                value={monthlyInvestableAmount}
+                                onChange={(e) => setMonthlyInvestableAmount(e.target.value)}
+                                icon={<DollarSign size={20} />}
+                                label="Monthly Investable Amount"
+                            />
+                            {selectedCurrency && (
+                                <span className="absolute right-4 top-[42px] px-2 py-1 bg-gray-100 border border-gray-300 rounded-md text-xs font-semibold text-gray-600">
+                                    {selectedCurrency}
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </Card>
                 <Button
@@ -476,49 +492,51 @@ export default function MyPage() {
                 </Button>
 
                 {/* My Exchange Rate */}
-                {myExchangeRate && (
-                    <Card>
-                        <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center space-x-3">
-                                <TrendingUp className="text-purple-600" size={24} />
-                                <h2 className="text-2xl font-bold text-gray-800">My Exchange Rate</h2>
+                {
+                    myExchangeRate && (
+                        <Card>
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center space-x-3">
+                                    <TrendingUp className="text-purple-600" size={24} />
+                                    <h2 className="text-2xl font-bold text-gray-800">My Exchange Rate</h2>
+                                </div>
+
+                                <div className="flex items-center space-x-4">
+                                    {myExchangeRate.lastUpdated && (
+                                        <div className="flex items-center space-x-1 text-sm text-gray-500">
+                                            <Clock size={14} />
+                                            <span>{formatDate(myExchangeRate.lastUpdated)}</span>
+                                        </div>
+                                    )}
+
+                                    <Button
+                                        onClick={handleUpdateExchangeRate}
+                                        loading={updating}
+                                        variant="secondary"
+                                    >
+                                        <RefreshCw size={16} />
+                                        <span>Update</span>
+                                    </Button>
+                                </div>
                             </div>
 
-                            <div className="flex items-center space-x-4">
+                            <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl">
+                                <p className="text-sm text-gray-600 mb-2">Current Rate</p>
+                                <p className="text-3xl font-bold text-gray-800 mb-4">
+                                    1 {myExchangeRate.base} = {myExchangeRate.rate.toFixed(4)} {myExchangeRate.target}
+                                </p>
+
                                 {myExchangeRate.lastUpdated && (
-                                    <div className="flex items-center space-x-1 text-sm text-gray-500">
-                                        <Clock size={14} />
-                                        <span>{formatDate(myExchangeRate.lastUpdated)}</span>
+                                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                                        <Clock size={16} />
+                                        <span>Last updated: {formatDate(myExchangeRate.lastUpdated)}</span>
                                     </div>
                                 )}
-
-                                <Button
-                                    onClick={handleUpdateExchangeRate}
-                                    loading={updating}
-                                    variant="secondary"
-                                >
-                                    <RefreshCw size={16} />
-                                    <span>Update</span>
-                                </Button>
                             </div>
-                        </div>
-
-                        <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl">
-                            <p className="text-sm text-gray-600 mb-2">Current Rate</p>
-                            <p className="text-3xl font-bold text-gray-800 mb-4">
-                                1 {myExchangeRate.base} = {myExchangeRate.rate.toFixed(4)} {myExchangeRate.target}
-                            </p>
-
-                            {myExchangeRate.lastUpdated && (
-                                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                                    <Clock size={16} />
-                                    <span>Last updated: {formatDate(myExchangeRate.lastUpdated)}</span>
-                                </div>
-                            )}
-                        </div>
-                    </Card>
-                )}
-            </div>
-        </div>
+                        </Card>
+                    )
+                }
+            </div >
+        </div >
     );
 }
