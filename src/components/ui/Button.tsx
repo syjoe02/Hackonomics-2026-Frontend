@@ -6,6 +6,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     loading?: boolean;
     variant?: 'primary' | 'secondary' | 'outline';
     fullWidth?: boolean;
+    size?: 'sm' | 'md' | 'lg';
 }
 
 export default function Button({
@@ -13,11 +14,17 @@ export default function Button({
     loading = false,
     variant = 'primary',
     fullWidth = false,
+    size = 'md',
     disabled,
     className = '',
     ...props
 }: ButtonProps) {
-    const baseStyles = "py-3 px-6 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed";
+    const sizeStyles = {
+        sm: "py-1.5 px-3 text-sm rounded-lg",
+        md: "py-3 px-6 text-base rounded-xl",
+        lg: "py-4 px-8 text-lg rounded-2xl",
+    };
+    const baseStyles = "font-semibold transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed";
 
     const variants = {
         primary: "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]",
@@ -27,10 +34,12 @@ export default function Button({
 
     const widthStyle = fullWidth ? "w-full" : "";
 
+
+
     return (
         <button
             disabled={disabled || loading}
-            className={`${baseStyles} ${variants[variant]} ${widthStyle} ${className}`}
+            className={`${baseStyles} ${sizeStyles[size]} ${variants[variant]} ${widthStyle} ${className}`}
             {...props}
         >
             {loading ? (

@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
-import { AuthProvider, useAuth } from "@/auth/AuthContext";
+import { AuthProvider } from "@/auth/AuthProvider";
+import { useAuth } from "./auth/useAuth";
 
 import MainLayout from "./components/layouts/MainLayout";
 import LoginPage from "./pages/LoginPage";
@@ -29,7 +30,7 @@ export default function AppRouter() {
       <Routes>
         {/* Public */}
         <Route element={<PublicRoute />}>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<LoginPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
@@ -38,9 +39,11 @@ export default function AppRouter() {
         {/* Protected */}
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
+            <Route path="/home" element={<HomePage />} />
             <Route path="/me" element={<MyPage />} />
 
           </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </AuthProvider>
