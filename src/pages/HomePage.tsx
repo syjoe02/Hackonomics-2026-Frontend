@@ -214,7 +214,12 @@ export default function HomePage() {
                         </div>
 
                         <div className="flex items-end">
-                            <Button fullWidth onClick={runSimulation} loading={simLoading}>
+                            <Button
+                                fullWidth
+                                loading={simLoading}
+                                onClick={runSimulation}
+                                disabled={!currency}
+                            >
                                 Run Simulation
                             </Button>
                         </div>
