@@ -12,13 +12,17 @@ import CategoryModal from "@/components/calendar/CategoryModal";
 
 export default function CalendarPage() {
     const navigate = useNavigate();
+
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [events, setEvents] = useState([]);
-    const [categories, setCategories] = useState([]);
+    const [events, setEvents] = useState<any[]>([]);
+    const [categories, setCategories] = useState<any[]>([]);
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+
     const [isSideEditorOpen, setIsSideEditorOpen] = useState(false);
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+
+    const [editingEvent, setEditingEvent] = useState<any | null>(null);
 
     const [newEvent, setNewEvent] = useState({
         title: "",
@@ -37,8 +41,8 @@ export default function CalendarPage() {
     }, []);
 
     const openCreateEditor = async () => {
-        const start = new Date();
-        const end = new Date(Date.now() + 60 * 60 * 1000);
+        const start = new Date(new Date().toISOString());
+        const end = new Date(start.getTime() + 60 * 60 * 1000);
 
         setNewEvent({
             title: "",
@@ -50,6 +54,7 @@ export default function CalendarPage() {
         const res = await api.get("/calendar/categories/");
         setCategories(res.data);
         setSelectedCategoryIds([]);
+        setEditingEvent(null);
         setIsSideEditorOpen(true);
     };
 
@@ -69,6 +74,17 @@ export default function CalendarPage() {
         setIsSideEditorOpen(false);
     };
 
+    const deleteEvent = async () => {
+        if (!editingEvent) return;
+        if (!confirm("Are you sure you want to delete this event?")) return;
+
+        await api.delete(`/calendar/events/${editingEvent.id}/`);
+        const res = await api.get("/calendar/events/");
+        setEvents(res.data);
+        setIsSideEditorOpen(false);
+        setEditingEvent(null);
+    };
+
     return (
         <AppBackground>
             <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-900 p-8">
@@ -84,7 +100,13 @@ export default function CalendarPage() {
                             </h1>
 
                             <div className="flex items-center space-x-4">
-                                <Button onClick={() => setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() - 1))} size="sm" variant="outline">
+                                <Button
+                                    onClick={() =>
+                                        setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() - 1))
+                                    }
+                                    size="sm"
+                                    variant="outline"
+                                >
                                     <ChevronLeft />
                                 </Button>
 
@@ -92,7 +114,13 @@ export default function CalendarPage() {
                                     Today
                                 </Button>
 
-                                <Button onClick={() => setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() + 1))} size="sm" variant="outline">
+                                <Button
+                                    onClick={() =>
+                                        setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() + 1))
+                                    }
+                                    size="sm"
+                                    variant="outline"
+                                >
                                     <ChevronRight />
                                 </Button>
 
@@ -110,10 +138,11 @@ export default function CalendarPage() {
                             currentDate={currentDate}
                             events={events}
                             onEventClick={event => {
+                                setEditingEvent(event);
                                 setNewEvent({
                                     title: event.title,
-                                    start_at: event.start_at.slice(0, 16),
-                                    end_at: event.end_at.slice(0, 16),
+                                    start_at: new Date(event.start_at).toISOString().slice(0, 16),
+                                    end_at: new Date(event.end_at).toISOString().slice(0, 16),
                                     estimated_cost: "",
                                 });
                                 setIsSideEditorOpen(true);
@@ -123,7 +152,7 @@ export default function CalendarPage() {
 
                     <EventSideEditor
                         isOpen={isSideEditorOpen}
-                        editingEvent={null}
+                        editingEvent={editingEvent}
                         newEvent={newEvent}
                         categories={categories}
                         selectedCategoryIds={selectedCategoryIds}
@@ -137,8 +166,12 @@ export default function CalendarPage() {
                                     : [...prev, id]
                             )
                         }
-                        onClose={() => setIsSideEditorOpen(false)}
+                        onClose={() => {
+                            setIsSideEditorOpen(false);
+                            setEditingEvent(null);
+                        }}
                         onSubmit={submitCreateEvent}
+                        onDelete={deleteEvent}
                     />
 
                     <CategoryModal

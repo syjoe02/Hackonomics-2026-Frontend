@@ -17,10 +17,12 @@ type Props = {
     };
     categories: Category[];
     selectedCategoryIds: string[];
+
     onChangeEvent: (field: string, value: string) => void;
     onToggleCategory: (id: string) => void;
     onClose: () => void;
     onSubmit: () => void;
+    onDelete?: () => void;
 };
 
 export default function EventSideEditor({
@@ -29,12 +31,37 @@ export default function EventSideEditor({
     newEvent,
     categories,
     selectedCategoryIds,
+
     onChangeEvent,
     onToggleCategory,
     onClose,
     onSubmit,
+    onDelete,
 }: Props) {
     if (!isOpen) return null;
+
+    const handleStartChange = (newStart: string) => {
+        if (!newStart) return;
+        const startUtc = new Date(newStart + "Z");
+        const endUtc = new Date(startUtc.getTime() + 60 * 60 * 1000);
+
+        onChangeEvent("start_at", newStart);
+        onChangeEvent("end_at", endUtc.toISOString().slice(0, 16));
+    };
+
+    const handleEndChange = (newEnd: string) => {
+        if (!newEnd) return;
+
+        const startUtc = new Date(newEvent.start_at + "Z");
+        const endUtc = new Date(newEnd + "Z");
+
+        if (endUtc <= startUtc) {
+            alert("End time must be after start time");
+            return;
+        }
+
+        onChangeEvent("end_at", newEnd);
+    };
 
     return (
         <div className="fixed right-0 top-0 h-full w-[380px] bg-white shadow-2xl p-6 z-50">
@@ -43,8 +70,11 @@ export default function EventSideEditor({
             </h2>
 
             <div className="space-y-3">
+                {/* TITLE */}
                 <div>
-                    <label className="block text-sm font-medium mb-1">Title</label>
+                    <label className="block text-sm font-medium mb-1">
+                        Title
+                    </label>
                     <input
                         type="text"
                         className="w-full border rounded-lg p-2"
@@ -53,8 +83,11 @@ export default function EventSideEditor({
                     />
                 </div>
 
+                {/* CATEGORIES */}
                 <div>
-                    <label className="block text-sm font-medium mb-1">Categories</label>
+                    <label className="block text-sm font-medium mb-1">
+                        Categories
+                    </label>
                     <div className="flex flex-wrap gap-2">
                         {categories.map(cat => {
                             const isSelected = selectedCategoryIds.includes(cat.id);
@@ -78,6 +111,7 @@ export default function EventSideEditor({
                     </div>
                 </div>
 
+                {/* ESTIMATED COST */}
                 <div>
                     <label className="block text-sm font-medium mb-1">
                         Estimated Cost
@@ -93,35 +127,63 @@ export default function EventSideEditor({
                     />
                 </div>
 
+                {/* START TIME (UTC) */}
                 <div>
-                    <label className="block text-sm font-medium mb-1">Start Time</label>
+                    <label className="block text-sm font-medium mb-1">
+                        Start Time
+                    </label>
                     <input
                         type="datetime-local"
                         className="w-full border rounded-lg p-2"
                         value={newEvent.start_at}
-                        onChange={e => onChangeEvent("start_at", e.target.value)}
+                        onChange={e => handleStartChange(e.target.value)}
                     />
                 </div>
 
+                {/* END TIME (UTC) */}
                 <div>
-                    <label className="block text-sm font-medium mb-1">End Time</label>
+                    <label className="block text-sm font-medium mb-1">
+                        End Time
+                    </label>
                     <input
                         type="datetime-local"
                         className="w-full border rounded-lg p-2"
                         value={newEvent.end_at}
-                        onChange={e => onChangeEvent("end_at", e.target.value)}
+                        onChange={e => handleEndChange(e.target.value)}
                     />
                 </div>
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
-                <Button variant="outline" size="sm" onClick={onClose}>
-                    Close
-                </Button>
+            <div className="flex justify-between gap-3 mt-6">
+                {/* DELETE BUTTON (only in edit mode) */}
+                {editingEvent && onDelete && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 border-red-300"
+                        onClick={onDelete}
+                    >
+                        Delete
+                    </Button>
+                )}
 
-                <Button variant="primary" size="sm" onClick={onSubmit}>
-                    {editingEvent ? "Save Changes" : "Create"}
-                </Button>
+                <div className="flex gap-3">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onClose}
+                    >
+                        Close
+                    </Button>
+
+                    <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={onSubmit}
+                    >
+                        {editingEvent ? "Save Changes" : "Create"}
+                    </Button>
+                </div>
             </div>
         </div>
     );

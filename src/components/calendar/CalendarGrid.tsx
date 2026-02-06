@@ -14,31 +14,63 @@ type Props = {
     onEventClick: (event: CalendarEvent) => void;
 };
 
+// UTC helper
+const toUtcDateOnly = (iso: string) =>
+    new Date(new Date(iso).toISOString().split("T")[0] + "T00:00:00.000Z");
+
 export default function CalendarGrid({
     currentDate,
     events,
     onEventClick,
 }: Props) {
+    const getCellDateUtc = (day: number) =>
+        new Date(
+            Date.UTC(
+                currentDate.getUTCFullYear(),
+                currentDate.getUTCMonth(),
+                day
+            )
+        );
+
     const getEventsForDay = (day: number) => {
+        const cellDate = getCellDateUtc(day);
+
         return events.filter(event => {
-            const eventDate = new Date(event.start_at);
-            return (
-                eventDate.getDate() === day &&
-                eventDate.getMonth() === currentDate.getMonth() &&
-                eventDate.getFullYear() === currentDate.getFullYear()
-            );
+            const start = toUtcDateOnly(event.start_at);
+            const end = toUtcDateOnly(event.end_at);
+            return cellDate >= start && cellDate <= end;
         });
     };
 
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInPrevMonth = new Date(year, month, 0).getDate();
-    const today = new Date();
+    const isEventStartOnThisDay = (event: CalendarEvent, day: number) => {
+        const start = toUtcDateOnly(event.start_at);
+        const cellDate = getCellDateUtc(day);
+        return start.getTime() === cellDate.getTime();
+    };
+
+    const isEventEndOnThisDay = (event: CalendarEvent, day: number) => {
+        const end = toUtcDateOnly(event.end_at);
+        const cellDate = getCellDateUtc(day);
+        return end.getTime() === cellDate.getTime();
+    };
+
+    const isSingleDayEvent = (event: CalendarEvent) => {
+        const start = toUtcDateOnly(event.start_at);
+        const end = toUtcDateOnly(event.end_at);
+        return start.getTime() === end.getTime();
+    };
+
+    const year = currentDate.getUTCFullYear();
+    const month = currentDate.getUTCMonth();
+    const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+    const firstDay = new Date(Date.UTC(year, month, 1)).getUTCDay();
+    const daysInPrevMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+
+    const todayUtc = toUtcDateOnly(new Date().toISOString());
 
     const cells: ReactNode[] = [];
 
+    // Previous month tail
     for (let i = firstDay - 1; i >= 0; i--) {
         const dayNumber = daysInPrevMonth - i;
         cells.push(
@@ -53,18 +85,21 @@ export default function CalendarGrid({
         );
     }
 
+    // Current month
     for (let day = 1; day <= daysInMonth; day++) {
+        const cellDate = getCellDateUtc(day);
+
         const isToday =
-            day === today.getDate() &&
-            month === today.getMonth() &&
-            year === today.getFullYear();
+            cellDate.getTime() === todayUtc.getTime();
 
         const dayEvents = getEventsForDay(day);
 
         cells.push(
             <div
                 key={day}
-                className={`min-h-24 p-2 border border-gray-200 hover:bg-gray-50 transition-colors ${isToday ? "bg-blue-50 border-blue-300" : "bg-white"
+                className={`min-h-24 p-2 border border-gray-200 hover:bg-gray-50 transition-colors ${isToday
+                    ? "bg-blue-50 border-blue-300"
+                    : "bg-white"
                     }`}
             >
                 <div
@@ -75,22 +110,37 @@ export default function CalendarGrid({
                 </div>
 
                 <div className="space-y-1">
-                    {dayEvents.map(event => (
-                        <div
-                            key={event.id}
-                            className={`text-xs ${event.color ?? "bg-blue-500"
-                                } text-white px-2 py-1 rounded truncate cursor-pointer`}
-                            title={event.title}
-                            onClick={() => onEventClick(event)}
-                        >
-                            {event.title}
-                        </div>
-                    ))}
+                    {dayEvents.map(event => {
+                        const isStart = isEventStartOnThisDay(event, day);
+                        const isEnd = isEventEndOnThisDay(event, day);
+                        const isSingle = isSingleDayEvent(event);
+
+                        return (
+                            <div
+                                key={event.id}
+                                className={`
+                                    text-xs ${event.color ?? "bg-blue-500"}
+                                    text-white px-2 py-1 truncate cursor-pointer
+                                    ${isStart || isSingle ? "rounded-l-full" : ""}
+                                    ${isEnd || isSingle ? "rounded-r-full" : ""}
+                                    h-5 flex items-center
+                                `}
+                                style={{
+                                    marginLeft: isStart || isSingle ? "0px" : "-8px",
+                                    marginRight: isEnd || isSingle ? "0px" : "-8px",
+                                }}
+                                onClick={() => onEventClick(event)}
+                            >
+                                {isStart && event.title}
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         );
     }
 
+    // Next month tail
     const totalCells = 42;
     const remainingCells = totalCells - cells.length;
 
@@ -109,9 +159,8 @@ export default function CalendarGrid({
 
     return (
         <>
-            {/* WEEKDAY HEADER */}
             <div className="grid grid-cols-7 gap-0">
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
                     <div
                         key={day}
                         className="p-2 min-h-[52px] text-center font-semibold text-gray-600 bg-gray-100 border border-gray-200"
