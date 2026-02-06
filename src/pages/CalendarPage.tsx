@@ -5,49 +5,42 @@ import Button from "@/components/ui/Button";
 import AppBackground from "@/components/layouts/AppBackground";
 import { raiseAppError } from "@/common/errors/raiseAppError";
 // Not using Left and Right icon without CalendarIcon
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar as ChevronLeft, ChevronRight } from "lucide-react";
 import type { CalendarEvent } from "@/api/types";
 import CalendarGrid from "@/components/calendar/CalendarGrid";
 import EventSideEditor from "@/components/calendar/EventSideEditor";
 import CategoryModal from "@/components/calendar/CategoryModal";
 
+type Category = {
+    id: string;
+    name: string;
+    color?: string;
+};
+
+type EditingEvent = {
+    id: string;
+    title: string;
+    start_at: string;
+    end_at: string;
+    estimated_cost?: number | null;
+};
 // UTC month helpers
 const utcMonthAnchor = (d: Date) =>
     new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1, 0, 0, 0, 0));
-
-const addUtcMonths = (anchor: Date, delta: number) =>
-    new Date(
-        Date.UTC(
-            anchor.getUTCFullYear(),
-            anchor.getUTCMonth() + delta,
-            1,
-            0,
-            0,
-            0,
-            0
-        )
-    );
-
-const formatMonthUtc = (d: Date) =>
-    new Intl.DateTimeFormat("en-US", {
-        month: "long",
-        year: "numeric",
-        timeZone: "UTC",
-    }).format(d);
 
 export default function CalendarPage() {
     const navigate = useNavigate();
 
     const [currentDate, setCurrentDate] = useState(() => utcMonthAnchor(new Date()));
     const [events, setEvents] = useState<CalendarEvent[]>([]);
-    const [categories, setCategories] = useState<any[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
 
     const [isSideEditorOpen, setIsSideEditorOpen] = useState(false);
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
 
-    const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+    const [editingEvent, setEditingEvent] = useState<EditingEvent | null>(null);
 
     const [newEvent, setNewEvent] = useState({
         title: "",
@@ -162,7 +155,7 @@ export default function CalendarPage() {
                                     size="sm"
                                     variant="outline"
                                 >
-                                    <ChevronLeft />
+                                    <ChevronLeft className="w-5 h-5" />
                                 </Button>
 
                                 <Button
@@ -195,7 +188,7 @@ export default function CalendarPage() {
                                     size="sm"
                                     variant="outline"
                                 >
-                                    <ChevronRight />
+                                    <ChevronRight className="w-5 h-5" />
                                 </Button>
 
                                 <Button onClick={() => setIsCategoryModalOpen(true)} size="md">

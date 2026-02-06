@@ -6,9 +6,17 @@ type Category = {
     color?: string;
 };
 
+type EditingEvent = {
+    id: string;
+    title: string;
+    start_at: string;
+    end_at: string;
+    estimated_cost?: number | null;
+};
+
 type Props = {
     isOpen: boolean;
-    editingEvent: any | null;
+    editingEvent: EditingEvent | null;
     newEvent: {
         title: string;
         start_at: string;
