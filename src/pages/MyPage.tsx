@@ -337,7 +337,7 @@ export default function MyPage() {
                                     </p>
                                 </div>
                             </div>
-                            <Button onClick={() => setShowCountryList(true)} variant="outline">
+                            <Button onClick={() => setShowCountryList(true)} variant="outline" size="md">
                                 Change
                             </Button>
                         </div>
@@ -393,7 +393,7 @@ export default function MyPage() {
                                     <p className="text-sm text-gray-600">Selected Currency</p>
                                     <p className="text-lg font-semibold text-gray-800">{selectedCurrency}</p>
                                 </div>
-                                <Button onClick={() => setShowCurrencyList(true)} variant="outline">
+                                <Button onClick={() => setShowCurrencyList(true)} variant="outline" size="md">
                                     Change
                                 </Button>
                             </div>
@@ -513,6 +513,7 @@ export default function MyPage() {
                                         onClick={handleUpdateExchangeRate}
                                         loading={updating}
                                         variant="secondary"
+                                        size="md"
                                     >
                                         <RefreshCw size={16} />
                                         <span>Update</span>
