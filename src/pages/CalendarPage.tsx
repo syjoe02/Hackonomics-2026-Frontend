@@ -4,17 +4,42 @@ import { api } from "@/api/client";
 import Button from "@/components/ui/Button";
 import AppBackground from "@/components/layouts/AppBackground";
 import { raiseAppError } from "@/common/errors/raiseAppError";
+// Not using Left and Right icon without CalendarIcon
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
-
+import type { CalendarEvent } from "@/api/types";
 import CalendarGrid from "@/components/calendar/CalendarGrid";
 import EventSideEditor from "@/components/calendar/EventSideEditor";
 import CategoryModal from "@/components/calendar/CategoryModal";
 
+// UTC month helpers
+const utcMonthAnchor = (d: Date) =>
+    new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1, 0, 0, 0, 0));
+
+const addUtcMonths = (anchor: Date, delta: number) =>
+    new Date(
+        Date.UTC(
+            anchor.getUTCFullYear(),
+            anchor.getUTCMonth() + delta,
+            1,
+            0,
+            0,
+            0,
+            0
+        )
+    );
+
+const formatMonthUtc = (d: Date) =>
+    new Intl.DateTimeFormat("en-US", {
+        month: "long",
+        year: "numeric",
+        timeZone: "UTC",
+    }).format(d);
+
 export default function CalendarPage() {
     const navigate = useNavigate();
 
-    const [currentDate, setCurrentDate] = useState(new Date());
-    const [events, setEvents] = useState<any[]>([]);
+    const [currentDate, setCurrentDate] = useState(() => utcMonthAnchor(new Date()));
+    const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
 
@@ -22,7 +47,7 @@ export default function CalendarPage() {
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
 
-    const [editingEvent, setEditingEvent] = useState<any | null>(null);
+    const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
 
     const [newEvent, setNewEvent] = useState({
         title: "",
@@ -37,8 +62,16 @@ export default function CalendarPage() {
     });
 
     useEffect(() => {
-        api.get("/calendar/events/").then(res => setEvents(res.data));
-    }, []);
+        async function fetchEvents() {
+            try {
+                const res = await api.get("/calendar/events/");
+                setEvents(res.data);
+            } catch (err) {
+                raiseAppError(err, navigate, "Failed to load calendar events");
+            }
+        }
+        fetchEvents();
+    }, [navigate]);
 
     const openCreateEditor = async () => {
         const start = new Date(new Date().toISOString());
@@ -51,38 +84,52 @@ export default function CalendarPage() {
             estimated_cost: "",
         });
 
-        const res = await api.get("/calendar/categories/");
-        setCategories(res.data);
-        setSelectedCategoryIds([]);
-        setEditingEvent(null);
-        setIsSideEditorOpen(true);
+        try {
+            const res = await api.get("/calendar/categories/");
+            setCategories(res.data);
+            setSelectedCategoryIds([]);
+            setEditingEvent(null);
+            setIsSideEditorOpen(true);
+        } catch (err) {
+            raiseAppError(err, navigate, "Failed to load categories");
+        }
     };
 
     const submitCreateEvent = async () => {
-        await api.post("/calendar/events/create/", {
-            title: newEvent.title,
-            category_ids: selectedCategoryIds,
-            estimated_cost: newEvent.estimated_cost
-                ? Number(newEvent.estimated_cost)
-                : null,
-            start_at: new Date(newEvent.start_at).toISOString(),
-            end_at: new Date(newEvent.end_at).toISOString(),
-        });
+        try {
+            await api.post("/calendar/events/create/", {
+                title: newEvent.title,
+                category_ids: selectedCategoryIds,
+                estimated_cost: newEvent.estimated_cost
+                    ? Number(newEvent.estimated_cost)
+                    : null,
+                start_at: new Date(newEvent.start_at).toISOString(),
+                end_at: new Date(newEvent.end_at).toISOString(),
+            });
 
-        const res = await api.get("/calendar/events/");
-        setEvents(res.data);
-        setIsSideEditorOpen(false);
+            const res = await api.get("/calendar/events/");
+            setEvents(res.data);
+            setIsSideEditorOpen(false);
+            setEditingEvent(null);
+        } catch (err) {
+            raiseAppError(err, navigate, "Failed to create event");
+        }
     };
 
     const deleteEvent = async () => {
         if (!editingEvent) return;
         if (!confirm("Are you sure you want to delete this event?")) return;
 
-        await api.delete(`/calendar/events/${editingEvent.id}/`);
-        const res = await api.get("/calendar/events/");
-        setEvents(res.data);
-        setIsSideEditorOpen(false);
-        setEditingEvent(null);
+        try {
+            await api.delete(`/calendar/events/${editingEvent.id}/`);
+
+            const res = await api.get("/calendar/events/");
+            setEvents(res.data);
+            setIsSideEditorOpen(false);
+            setEditingEvent(null);
+        } catch (err) {
+            raiseAppError(err, navigate, "Failed to delete event");
+        }
     };
 
     return (
@@ -92,17 +139,25 @@ export default function CalendarPage() {
 
                     <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
                         <div className="flex items-center justify-between mb-8">
+                            {/* headers */}
                             <h1 className="text-3xl font-bold text-gray-800">
-                                {currentDate.toLocaleDateString("en-US", {
+                                {new Intl.DateTimeFormat("en-US", {
                                     month: "long",
                                     year: "numeric",
-                                })}
+                                    timeZone: "UTC",
+                                }).format(currentDate)}
                             </h1>
 
                             <div className="flex items-center space-x-4">
                                 <Button
                                     onClick={() =>
-                                        setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() - 1))
+                                        setCurrentDate(d =>
+                                            new Date(Date.UTC(
+                                                d.getUTCFullYear(),
+                                                d.getUTCMonth() - 1,
+                                                1
+                                            ))
+                                        )
                                     }
                                     size="sm"
                                     variant="outline"
@@ -110,13 +165,32 @@ export default function CalendarPage() {
                                     <ChevronLeft />
                                 </Button>
 
-                                <Button onClick={() => setCurrentDate(new Date())} size="md">
+                                <Button
+                                    onClick={() =>
+                                        setCurrentDate(
+                                            new Date(
+                                                Date.UTC(
+                                                    new Date().getUTCFullYear(),
+                                                    new Date().getUTCMonth(),
+                                                    1
+                                                )
+                                            )
+                                        )
+                                    }
+                                    size="md"
+                                >
                                     Today
                                 </Button>
 
                                 <Button
                                     onClick={() =>
-                                        setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() + 1))
+                                        setCurrentDate(d =>
+                                            new Date(Date.UTC(
+                                                d.getUTCFullYear(),
+                                                d.getUTCMonth() + 1,
+                                                1
+                                            ))
+                                        )
                                     }
                                     size="sm"
                                     variant="outline"
@@ -143,7 +217,7 @@ export default function CalendarPage() {
                                     title: event.title,
                                     start_at: new Date(event.start_at).toISOString().slice(0, 16),
                                     end_at: new Date(event.end_at).toISOString().slice(0, 16),
-                                    estimated_cost: "",
+                                    estimated_cost: event.estimated_cost?.toString() ?? "",
                                 });
                                 setIsSideEditorOpen(true);
                             }}
@@ -186,10 +260,14 @@ export default function CalendarPage() {
                         }}
                         onToggleColorPicker={() => setIsColorPickerOpen(p => !p)}
                         onCreate={async () => {
-                            await api.post("/calendar/categories/create/", newCategory);
-                            const res = await api.get("/calendar/categories/");
-                            setCategories(res.data);
-                            setNewCategory({ name: "", color: "#3b82f6" });
+                            try {
+                                await api.post("/calendar/categories/create/", newCategory);
+                                const res = await api.get("/calendar/categories/");
+                                setCategories(res.data);
+                                setNewCategory({ name: "", color: "#3b82f6" });
+                            } catch (err) {
+                                raiseAppError(err, navigate, "Failed to create category");
+                            }
                         }}
                         onDelete={async id => {
                             await api.delete(`/calendar/categories/${id}/`);

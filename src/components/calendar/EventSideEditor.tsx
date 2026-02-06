@@ -42,25 +42,25 @@ export default function EventSideEditor({
 
     const handleStartChange = (newStart: string) => {
         if (!newStart) return;
-        const startUtc = new Date(newStart + "Z");
+        const startUtc = new Date(newStart + ":00.000Z");
         const endUtc = new Date(startUtc.getTime() + 60 * 60 * 1000);
 
-        onChangeEvent("start_at", newStart);
+        onChangeEvent("start_at", startUtc.toISOString().slice(0, 16));
         onChangeEvent("end_at", endUtc.toISOString().slice(0, 16));
     };
 
     const handleEndChange = (newEnd: string) => {
         if (!newEnd) return;
 
-        const startUtc = new Date(newEvent.start_at + "Z");
-        const endUtc = new Date(newEnd + "Z");
+        const startUtc = new Date(newEvent.start_at + ":00.000Z");
+        const endUtc = new Date(newEnd + ":00.000Z");
 
         if (endUtc <= startUtc) {
             alert("End time must be after start time");
             return;
         }
 
-        onChangeEvent("end_at", newEnd);
+        onChangeEvent("end_at", endUtc.toISOString().slice(0, 16));
     };
 
     return (

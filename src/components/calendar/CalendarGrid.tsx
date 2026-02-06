@@ -1,12 +1,5 @@
 import type { ReactNode } from "react";
-
-export interface CalendarEvent {
-    id: string;
-    title: string;
-    start_at: string;
-    end_at: string;
-    color?: string;
-}
+import type { CalendarEvent } from "@/api/types";
 
 type Props = {
     currentDate: Date;
@@ -14,43 +7,46 @@ type Props = {
     onEventClick: (event: CalendarEvent) => void;
 };
 
-// UTC helper
 const toUtcDateOnly = (iso: string) =>
     new Date(new Date(iso).toISOString().split("T")[0] + "T00:00:00.000Z");
+
+const getCellDateUtc = (year: number, month: number, day: number) =>
+    new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
 
 export default function CalendarGrid({
     currentDate,
     events,
     onEventClick,
 }: Props) {
-    const getCellDateUtc = (day: number) =>
-        new Date(
-            Date.UTC(
-                currentDate.getUTCFullYear(),
-                currentDate.getUTCMonth(),
-                day
-            )
-        );
+    const year = currentDate.getUTCFullYear();
+    const month = currentDate.getUTCMonth();
+
+    const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+    const firstDay = new Date(Date.UTC(year, month, 1)).getUTCDay();
+    const daysInPrevMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+
+    const todayUtc = toUtcDateOnly(new Date().toISOString());
 
     const getEventsForDay = (day: number) => {
-        const cellDate = getCellDateUtc(day);
+        const cellDate = getCellDateUtc(year, month, day);
 
         return events.filter(event => {
             const start = toUtcDateOnly(event.start_at);
             const end = toUtcDateOnly(event.end_at);
+
             return cellDate >= start && cellDate <= end;
         });
     };
 
     const isEventStartOnThisDay = (event: CalendarEvent, day: number) => {
         const start = toUtcDateOnly(event.start_at);
-        const cellDate = getCellDateUtc(day);
+        const cellDate = getCellDateUtc(year, month, day);
         return start.getTime() === cellDate.getTime();
     };
 
     const isEventEndOnThisDay = (event: CalendarEvent, day: number) => {
         const end = toUtcDateOnly(event.end_at);
-        const cellDate = getCellDateUtc(day);
+        const cellDate = getCellDateUtc(year, month, day);
         return end.getTime() === cellDate.getTime();
     };
 
@@ -60,17 +56,8 @@ export default function CalendarGrid({
         return start.getTime() === end.getTime();
     };
 
-    const year = currentDate.getUTCFullYear();
-    const month = currentDate.getUTCMonth();
-    const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-    const firstDay = new Date(Date.UTC(year, month, 1)).getUTCDay();
-    const daysInPrevMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
-
-    const todayUtc = toUtcDateOnly(new Date().toISOString());
-
     const cells: ReactNode[] = [];
 
-    // Previous month tail
     for (let i = firstDay - 1; i >= 0; i--) {
         const dayNumber = daysInPrevMonth - i;
         cells.push(
@@ -85,9 +72,8 @@ export default function CalendarGrid({
         );
     }
 
-    // Current month
     for (let day = 1; day <= daysInMonth; day++) {
-        const cellDate = getCellDateUtc(day);
+        const cellDate = getCellDateUtc(year, month, day);
 
         const isToday =
             cellDate.getTime() === todayUtc.getTime();
@@ -97,10 +83,10 @@ export default function CalendarGrid({
         cells.push(
             <div
                 key={day}
-                className={`min-h-24 p-2 border border-gray-200 hover:bg-gray-50 transition-colors ${isToday
-                    ? "bg-blue-50 border-blue-300"
-                    : "bg-white"
-                    }`}
+                className={`
+                    min-h-24 p-2 border border-gray-200 hover:bg-gray-50 transition-colors
+                    ${isToday ? "bg-blue-50 border-blue-300" : "bg-white"}
+                `}
             >
                 <div
                     className={`text-sm font-semibold mb-1 ${isToday ? "text-blue-600" : "text-gray-700"
@@ -140,8 +126,7 @@ export default function CalendarGrid({
         );
     }
 
-    // Next month tail
-    const totalCells = 42;
+    const totalCells = 42; // 6 weeks
     const remainingCells = totalCells - cells.length;
 
     for (let i = 1; i <= remainingCells; i++) {
