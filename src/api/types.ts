@@ -50,4 +50,5 @@ export interface CalendarEvent {
     end_at: string;
     estimated_cost?: number | null;
     color?: string;
+    category_ids: string[];
 }

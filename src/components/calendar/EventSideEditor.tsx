@@ -98,14 +98,16 @@ export default function EventSideEditor({
                     </label>
                     <div className="flex flex-wrap gap-2">
                         {categories.map(cat => {
-                            const isSelected = selectedCategoryIds.includes(cat.id);
+                            const isSelected = selectedCategoryIds.some(
+                                id => id === cat.id
+                            );
 
                             return (
                                 <button
                                     key={cat.id}
                                     type="button"
                                     onClick={() => onToggleCategory(cat.id)}
-                                    className="px-3 py-1 rounded-full text-xs border"
+                                    className="px-3 py-1 rounded-full text-xs border transition-colors"
                                     style={{
                                         backgroundColor: isSelected ? cat.color : "white",
                                         borderColor: cat.color,

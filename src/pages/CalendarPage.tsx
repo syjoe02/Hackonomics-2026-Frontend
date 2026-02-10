@@ -4,8 +4,8 @@ import { api } from "@/api/client";
 import Button from "@/components/ui/Button";
 import AppBackground from "@/components/layouts/AppBackground";
 import { raiseAppError } from "@/common/errors/raiseAppError";
-// Not using Left and Right icon without CalendarIcon
-import { Calendar as ChevronLeft, ChevronRight } from "lucide-react";
+// Cannot use Left and Right icon without CalendarIcon
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import type { CalendarEvent } from "@/api/types";
 import CalendarGrid from "@/components/calendar/CalendarGrid";
 import EventSideEditor from "@/components/calendar/EventSideEditor";
@@ -27,6 +27,9 @@ type EditingEvent = {
 // UTC month helpers
 const utcMonthAnchor = (d: Date) =>
     new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1, 0, 0, 0, 0));
+
+const toUtcIso = (localDateTime: string) =>
+    new Date(localDateTime + ":00.000Z").toISOString();
 
 export default function CalendarPage() {
     const navigate = useNavigate();
@@ -54,16 +57,28 @@ export default function CalendarPage() {
         color: "#3b82f6",
     });
 
-    useEffect(() => {
-        async function fetchEvents() {
-            try {
-                const res = await api.get("/calendar/events/");
-                setEvents(res.data);
-            } catch (err) {
-                raiseAppError(err, navigate, "Failed to load calendar events");
-            }
+    // Reusable loaders
+    const loadEvents = async () => {
+        try {
+            const res = await api.get("/calendar/events/");
+            setEvents(res.data);
+        } catch (err) {
+            raiseAppError(err, navigate, "Failed to load calendar events");
         }
-        fetchEvents();
+    };
+
+    const loadCategories = async () => {
+        try {
+            const res = await api.get("/calendar/categories/");
+            setCategories(res.data);
+        } catch (err) {
+            raiseAppError(err, navigate, "Failed to load categories");
+        }
+    };
+
+    // Initial
+    useEffect(() => {
+        loadCategories().then(() => loadEvents());
     }, [navigate]);
 
     const openCreateEditor = async () => {
@@ -78,8 +93,7 @@ export default function CalendarPage() {
         });
 
         try {
-            const res = await api.get("/calendar/categories/");
-            setCategories(res.data);
+            await loadCategories();
             setSelectedCategoryIds([]);
             setEditingEvent(null);
             setIsSideEditorOpen(true);
@@ -96,16 +110,37 @@ export default function CalendarPage() {
                 estimated_cost: newEvent.estimated_cost
                     ? Number(newEvent.estimated_cost)
                     : null,
-                start_at: new Date(newEvent.start_at).toISOString(),
-                end_at: new Date(newEvent.end_at).toISOString(),
+                start_at: toUtcIso(newEvent.start_at),
+                end_at: toUtcIso(newEvent.end_at),
             });
 
-            const res = await api.get("/calendar/events/");
-            setEvents(res.data);
+            await loadEvents();
             setIsSideEditorOpen(false);
             setEditingEvent(null);
         } catch (err) {
             raiseAppError(err, navigate, "Failed to create event");
+        }
+    };
+
+    const submitUpdateEvent = async () => {
+        if (!editingEvent) return;
+
+        try {
+            await api.put(`/calendar/events/${editingEvent.id}/`, {
+                title: newEvent.title,
+                category_ids: selectedCategoryIds,
+                estimated_cost: newEvent.estimated_cost
+                    ? Number(newEvent.estimated_cost)
+                    : null,
+                start_at: toUtcIso(newEvent.start_at),
+                end_at: toUtcIso(newEvent.end_at),
+            });
+
+            await loadEvents();
+            setIsSideEditorOpen(false);
+            setEditingEvent(null);
+        } catch (err) {
+            raiseAppError(err, navigate, "Failed to update event");
         }
     };
 
@@ -115,9 +150,7 @@ export default function CalendarPage() {
 
         try {
             await api.delete(`/calendar/events/${editingEvent.id}/`);
-
-            const res = await api.get("/calendar/events/");
-            setEvents(res.data);
+            await loadEvents();
             setIsSideEditorOpen(false);
             setEditingEvent(null);
         } catch (err) {
@@ -191,7 +224,10 @@ export default function CalendarPage() {
                                     <ChevronRight className="w-5 h-5" />
                                 </Button>
 
-                                <Button onClick={() => setIsCategoryModalOpen(true)} size="md">
+                                <Button onClick={async () => {
+                                    await loadCategories();
+                                    setIsCategoryModalOpen(true)
+                                }} size="md">
                                     Categories
                                 </Button>
 
@@ -204,7 +240,7 @@ export default function CalendarPage() {
                         <CalendarGrid
                             currentDate={currentDate}
                             events={events}
-                            onEventClick={event => {
+                            onEventClick={async event => {
                                 setEditingEvent(event);
                                 setNewEvent({
                                     title: event.title,
@@ -212,6 +248,11 @@ export default function CalendarPage() {
                                     end_at: new Date(event.end_at).toISOString().slice(0, 16),
                                     estimated_cost: event.estimated_cost?.toString() ?? "",
                                 });
+                                const eventCategoryIds =
+                                    event.category_ids ?? [];
+
+                                await loadCategories();
+                                setSelectedCategoryIds(eventCategoryIds);
                                 setIsSideEditorOpen(true);
                             }}
                         />
@@ -237,7 +278,7 @@ export default function CalendarPage() {
                             setIsSideEditorOpen(false);
                             setEditingEvent(null);
                         }}
-                        onSubmit={submitCreateEvent}
+                        onSubmit={editingEvent ? submitUpdateEvent : submitCreateEvent}
                         onDelete={deleteEvent}
                     />
 
@@ -255,8 +296,7 @@ export default function CalendarPage() {
                         onCreate={async () => {
                             try {
                                 await api.post("/calendar/categories/create/", newCategory);
-                                const res = await api.get("/calendar/categories/");
-                                setCategories(res.data);
+                                await loadCategories();
                                 setNewCategory({ name: "", color: "#3b82f6" });
                             } catch (err) {
                                 raiseAppError(err, navigate, "Failed to create category");
@@ -264,8 +304,7 @@ export default function CalendarPage() {
                         }}
                         onDelete={async id => {
                             await api.delete(`/calendar/categories/${id}/`);
-                            const res = await api.get("/calendar/categories/");
-                            setCategories(res.data);
+                            await loadCategories();
                         }}
                         onClose={() => setIsCategoryModalOpen(false)}
                     />
