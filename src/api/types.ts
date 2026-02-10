@@ -41,3 +41,14 @@ export type ErrorAction =
     | "REDIRECT_LOGIN"
     | "RETRY"
     | "IGNORE";
+
+// calendar
+export interface CalendarEvent {
+    id: string;
+    title: string;
+    start_at: string;
+    end_at: string;
+    estimated_cost?: number | null;
+    color?: string;
+    category_ids: string[];
+}

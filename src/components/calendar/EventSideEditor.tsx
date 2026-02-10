@@ -6,9 +6,17 @@ type Category = {
     color?: string;
 };
 
+type EditingEvent = {
+    id: string;
+    title: string;
+    start_at: string;
+    end_at: string;
+    estimated_cost?: number | null;
+};
+
 type Props = {
     isOpen: boolean;
-    editingEvent: any | null;
+    editingEvent: EditingEvent | null;
     newEvent: {
         title: string;
         start_at: string;
@@ -42,25 +50,25 @@ export default function EventSideEditor({
 
     const handleStartChange = (newStart: string) => {
         if (!newStart) return;
-        const startUtc = new Date(newStart + "Z");
+        const startUtc = new Date(newStart + ":00.000Z");
         const endUtc = new Date(startUtc.getTime() + 60 * 60 * 1000);
 
-        onChangeEvent("start_at", newStart);
+        onChangeEvent("start_at", startUtc.toISOString().slice(0, 16));
         onChangeEvent("end_at", endUtc.toISOString().slice(0, 16));
     };
 
     const handleEndChange = (newEnd: string) => {
         if (!newEnd) return;
 
-        const startUtc = new Date(newEvent.start_at + "Z");
-        const endUtc = new Date(newEnd + "Z");
+        const startUtc = new Date(newEvent.start_at + ":00.000Z");
+        const endUtc = new Date(newEnd + ":00.000Z");
 
         if (endUtc <= startUtc) {
             alert("End time must be after start time");
             return;
         }
 
-        onChangeEvent("end_at", newEnd);
+        onChangeEvent("end_at", endUtc.toISOString().slice(0, 16));
     };
 
     return (
@@ -90,14 +98,16 @@ export default function EventSideEditor({
                     </label>
                     <div className="flex flex-wrap gap-2">
                         {categories.map(cat => {
-                            const isSelected = selectedCategoryIds.includes(cat.id);
+                            const isSelected = selectedCategoryIds.some(
+                                id => id === cat.id
+                            );
 
                             return (
                                 <button
                                     key={cat.id}
                                     type="button"
                                     onClick={() => onToggleCategory(cat.id)}
-                                    className="px-3 py-1 rounded-full text-xs border"
+                                    className="px-3 py-1 rounded-full text-xs border transition-colors"
                                     style={{
                                         backgroundColor: isSelected ? cat.color : "white",
                                         borderColor: cat.color,

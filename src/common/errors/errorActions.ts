@@ -1,14 +1,15 @@
 import type { ErrorAction } from "@/api/types";
 
 export const ErrorActions: Record<string, ErrorAction> = {
-    // 400 - Client errors
+    // ===== 400 - BAD REQUEST =====
     INVALID_PARAMETER: "SHOW_ALERT",
     VALIDATION_FAILED: "SHOW_ALERT",
     MISSING_REQUIRED_FIELD: "SHOW_ALERT",
     PASSWORD_TOO_SHORT: "SHOW_ALERT",
     PASSWORD_POLICY_VIOLATION: "SHOW_ALERT",
     GOOGLE_AUTH_CODE_MISSING: "SHOW_ALERT",
-    // 401 - Authentication
+
+    // ===== 401 - UNAUTHORIZED =====
     INVALID_CREDENTIALS: "SHOW_ALERT",
     UNAUTHORIZED: "REDIRECT_LOGIN",
 
@@ -18,33 +19,41 @@ export const ErrorActions: Record<string, ErrorAction> = {
     REFRESH_TOKEN_INVALID: "LOGOUT",
 
     GOOGLE_AUTH_FAILED: "SHOW_ALERT",
-    // 403 - Authorization
+
+    // ===== 403 - FORBIDDEN =====
     FORBIDDEN: "SHOW_ALERT",
     ACCESS_DENIED: "SHOW_ALERT",
     USER_BLOCKED: "SHOW_ALERT",
     USER_SUSPENDED: "SHOW_ALERT",
     USER_DELETED: "SHOW_ALERT",
-    // 404
+
+    // ===== 404 - NOT FOUND =====
     DATA_NOT_FOUND: "SHOW_ALERT",
     USER_NOT_FOUND: "SHOW_ALERT",
     FILE_NOT_FOUND: "SHOW_ALERT",
-    // 405 / 415
+    USER_CALENDAR_NOT_FOUND: "SHOW_ALERT",
+
+    // ===== 405 / 415 =====
     METHOD_NOT_ALLOWED: "SHOW_ALERT",
     UNSUPPORTED_MEDIA_TYPE: "SHOW_ALERT",
-    // 409
+
+    // ===== 409 - CONFLICT =====
     DUPLICATE_ENTRY: "SHOW_ALERT",
     DATA_INTEGRITY_VIOLATION: "SHOW_ALERT",
-    // 413
+
+    // ===== 413 =====
     FILE_TOO_LARGE: "SHOW_ALERT",
-    // 5xx / External / Infra
+
+    // ===== 5xx / External / Infra =====
     EXTERNAL_API_FAILED: "RETRY",
     INVALID_RESPONSE: "RETRY",
-    TIMEOUT: "RETRY",
-    SERVICE_UNAVAILABLE: "RETRY",
     GOOGLE_USERINFO_FAILED: "RETRY",
+    SERVICE_UNAVAILABLE: "RETRY",
+    TIMEOUT: "RETRY",
 
     FILE_UPLOAD_FAILED: "RETRY",
     INTERNAL_ERROR: "SHOW_ALERT",
-    // 501
+
+    // ===== 501 =====
     NOT_IMPLEMENTED: "IGNORE",
 };

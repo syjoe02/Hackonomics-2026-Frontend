@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { api } from "@/api/client";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
@@ -61,7 +61,7 @@ export default function HomePage() {
     const [simLoading, setSimLoading] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    const loadAccountCurrency = async () => {
+    const loadAccountCurrency = useCallback(async () => {
         try {
             const res = await api.get("/account/me/");
             const userCurrency = res.data.currency;
@@ -69,9 +69,9 @@ export default function HomePage() {
         } catch {
             setCurrency("CAD");
         }
-    };
+    }, []);
 
-    const loadHistory = async (cur: string) => {
+    const loadHistory = useCallback(async (cur: string) => {
         setLoading(true);
         try {
             const res = await api.get<ExchangeHistoryResponse>(
@@ -87,7 +87,7 @@ export default function HomePage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [period]);
 
     const runSimulation = async () => {
         if (!depositRate) return;
@@ -109,12 +109,12 @@ export default function HomePage() {
 
     useEffect(() => {
         loadAccountCurrency();
-    }, []);
+    }, [loadAccountCurrency]);
 
     useEffect(() => {
         if (!currency) return;
         loadHistory(currency);
-    }, [currency, period]);
+    }, [currency, period, loadHistory]);
 
     return (
         <AppBackground>
