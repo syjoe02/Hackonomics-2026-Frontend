@@ -35,7 +35,7 @@ export default function OAuthCallbackPage() {
         };
 
         run();
-    }, []);
+    }, [navigate, setAccessToken]);
 
     return <div className="text-center p-10">Logging in with Google...</div>;
 }

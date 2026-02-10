@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/api/client";
 import Button from "@/components/ui/Button";
 import AppBackground from "@/components/layouts/AppBackground";
 import { raiseAppError } from "@/common/errors/raiseAppError";
 // Cannot use Left and Right icon without CalendarIcon
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar as ChevronLeft, ChevronRight } from "lucide-react";
 import type { CalendarEvent } from "@/api/types";
 import CalendarGrid from "@/components/calendar/CalendarGrid";
 import EventSideEditor from "@/components/calendar/EventSideEditor";
@@ -58,28 +58,31 @@ export default function CalendarPage() {
     });
 
     // Reusable loaders
-    const loadEvents = async () => {
+    const loadEvents = useCallback(async () => {
         try {
             const res = await api.get("/calendar/events/");
             setEvents(res.data);
         } catch (err) {
             raiseAppError(err, navigate, "Failed to load calendar events");
         }
-    };
+    }, [navigate]);
 
-    const loadCategories = async () => {
+    const loadCategories = useCallback(async () => {
         try {
             const res = await api.get("/calendar/categories/");
             setCategories(res.data);
         } catch (err) {
             raiseAppError(err, navigate, "Failed to load categories");
         }
-    };
+    }, [navigate]);
 
     // Initial
     useEffect(() => {
-        loadCategories().then(() => loadEvents());
-    }, [navigate]);
+        (async () => {
+            await loadCategories();
+            await loadEvents();
+        })();
+    }, [loadCategories, loadEvents]);
 
     const openCreateEditor = async () => {
         const start = new Date(new Date().toISOString());
