@@ -43,6 +43,7 @@ export default function AppRouter() {
             <Route path="/home" element={<HomePage />} />
             <Route path="/me" element={<MyPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/calendar/advisor" element={<CalendarPage />} />
 
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
