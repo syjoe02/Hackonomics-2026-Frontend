@@ -4,6 +4,7 @@ import type { CalendarEvent } from "@/api/types";
 type Props = {
     currentDate: Date;
     events: CalendarEvent[];
+    highlightedEventIds: Set<string>;
     onEventClick: (event: CalendarEvent) => void;
 };
 
@@ -16,6 +17,7 @@ const getCellDateUtc = (year: number, month: number, day: number) =>
 export default function CalendarGrid({
     currentDate,
     events,
+    highlightedEventIds,
     onEventClick,
 }: Props) {
     const year = currentDate.getUTCFullYear();
@@ -100,6 +102,9 @@ export default function CalendarGrid({
                         const isStart = isEventStartOnThisDay(event, day);
                         const isEnd = isEventEndOnThisDay(event, day);
                         const isSingle = isSingleDayEvent(event);
+                        // AI Logic
+                        const isHighlighted =
+                            highlightedEventIds.has(event.id);
 
                         return (
                             <div
@@ -110,6 +115,7 @@ export default function CalendarGrid({
                                     ${isStart || isSingle ? "rounded-l-full" : ""}
                                     ${isEnd || isSingle ? "rounded-r-full" : ""}
                                     h-5 flex items-center
+                                    ${isHighlighted ? "ring-2 ring-red-400" : ""}
                                 `}
                                 style={{
                                     marginLeft: isStart || isSingle ? "0px" : "-8px",
