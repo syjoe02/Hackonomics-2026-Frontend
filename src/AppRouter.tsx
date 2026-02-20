@@ -9,6 +9,7 @@ import OAuthCallbackPage from "./pages/OAuthCallbackPage"
 import MyPage from "./pages/MyPage";
 import HomePage from "./pages/HomePage";
 import CalendarPage from "./pages/CalendarPage";
+import NewsPage from "./pages/NewsPage";
 
 function ProtectedRoute() {
   const { accessToken, loading } = useAuth();
@@ -44,6 +45,7 @@ export default function AppRouter() {
             <Route path="/me" element={<MyPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/calendar/advisor" element={<CalendarPage />} />
+            <Route path="/news/" element={<NewsPage />} />
 
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
