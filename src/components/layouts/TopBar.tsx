@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/auth/useAuth";
 import { api } from "@/api/client";
-import { Home, LogOut, User, Calendar } from "lucide-react";
+import { Home, LogOut, User, Calendar, Newspaper } from "lucide-react";
 import Button from "@/components/ui/Button";
 
 export default function TopBar() {
@@ -14,6 +14,10 @@ export default function TopBar() {
 
     const handleGoCalendar = () => {
         navigate("/calendar");
+    }
+
+    const handleGoNews = () => {
+        navigate("/news");
     }
 
     const handleGoMyPage = () => {
@@ -41,6 +45,11 @@ export default function TopBar() {
                     <Button onClick={handleGoCalendar} variant="secondary" size="sm">
                         <Calendar size={16} />
                         <span>Calendar</span>
+                    </Button>
+
+                    <Button onClick={handleGoNews} variant="secondary" size="sm">
+                        <Newspaper size={16} />
+                        <span>News</span>
                     </Button>
                 </div>
 
