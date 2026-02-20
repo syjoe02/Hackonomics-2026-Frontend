@@ -52,3 +52,9 @@ export interface CalendarEvent {
     color?: string;
     category_ids: string[];
 }
+
+// news
+export type NewsItem = {
+    title: string;
+    description: string;
+};
